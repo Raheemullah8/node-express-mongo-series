@@ -3,6 +3,7 @@ const express = require("express");
 const path = require("path");
 const app = express();
 const userModel = require("./schema/user");
+const postModel = require('./schema/post')
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
@@ -22,7 +23,7 @@ app.get("/login", (req, res) => {
 
 function isLoggedIn(req, res, next) {
     if (!req.cookies.token) {
-        return res.send("You must be logged in");
+        return res.redirect('/login')
     } else {
         try {
             let data = jwt.verify(req.cookies.token, "sdjhsadjsdghdsj");
@@ -34,11 +35,24 @@ function isLoggedIn(req, res, next) {
     }
 }
 
-  app.get("/profile",isLoggedIn, (req, res) => {
-    console.log(req.user)
-    res.render("login")
+  app.get("/profile",isLoggedIn,async (req, res) => {
+    const user = await userModel.findOne({email:req.user.email}).populate('post')
+    res.render("profile",{user})
   });
-  
+
+  app.post('/posts',isLoggedIn,async (req,res)=>{
+    let user = await userModel.findOne({email:req.user.email})
+    let {content} = req.body;
+
+    let post = await postModel.create({
+      user:user._id,
+      content
+    });
+   user.post.push(post._id)
+    await user.save();
+    res.redirect('/profile')
+  })
+
 app.post("/register", async (req, res) => {
   let { username, name, email, password, age } = req.body;
   let user = await userModel.findOne({ email });
@@ -58,9 +72,9 @@ app.post("/register", async (req, res) => {
     "sdjhsadjsdghdsj"
   );
   res.cookie("token", token);
-  res.send("user-Register");
+  res.redirect('/login');
 });
-app.post("/singin", async (req, res) => {
+app.post("/signin", async (req, res) => {
   let { email, password } = req.body;
   let user = await userModel.findOne({ email });
   if (!user) return res.status(500).send("SomeThing Wrong");
@@ -68,7 +82,7 @@ app.post("/singin", async (req, res) => {
   if (match) {
     let token = jwt.sign({ email: email, userId: user._id }, "sdjhsadjsdghdsj");
     res.cookie("token", token);
-    return res.status(200).send("You Are Logged In");
+    return res.status(200).redirect('/profile');
   }
 });
 
