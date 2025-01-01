@@ -40,11 +40,14 @@
                             <!-- Like and Edit Buttons -->
                             <div class="mt-4 flex justify-between items-center">
                                 <div>
-                                    <a href="#" class="text-blue-500 hover:text-blue-400">Like</a>
-                                    <span class="text-gray-400"><%= post.like.length %> like<%= post.like.length > 1 ? 's' : '' %></span>
+                                    <a href="/like/<%= post._id %>" class="text-blue-500 hover:text-blue-400">
+                                        <%= post.like.indexOf(user._id) == -1 ? "like" : "UnLike" %>
+                                    </a>
+                                    <span class="text-gray-400"><%= post.like.length %></span>
                                 </div>
-                                <a href="#" class="text-yellow-500 hover:text-yellow-400 text-sm">Edit</a>
+                                <a href="/edit/<%= post._id %>" class="text-yellow-500 hover:text-yellow-400 text-sm">Edit</a>
                             </div>
+                            
                         </div>
                     <% }) %>
                 </div>
